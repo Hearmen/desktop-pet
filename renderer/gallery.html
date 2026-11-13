@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'" />
+    <title>Gallery</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #14110f;
+        color: #e9dcc3;
+        font-family: -apple-system, 'Segoe UI', sans-serif;
+      }
+      main {
+        padding: 20px 24px 32px;
+      }
+      h2 {
+        margin: 20px 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #b9a57f;
+      }
+      h2:first-child {
+        margin-top: 0;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .row img {
+        min-width: 0;
+        height: 420px;
+        max-width: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
+      }
+      .row img.cutout {
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h2>Main</h2>
+      <div class="row">
+        <img class="cutout" src="../assets/gallery/bismarck-main.png" alt="Main outfit, full rigging" />
+      </div>
+
+      <h2>Christmas</h2>
+      <div class="row">
+        <img src="../assets/gallery/bismarck-christmas-scene.webp" alt="Christmas illustration, full scene" />
+        <img src="../assets/gallery/bismarck-christmas.jpg" alt="Christmas illustration, portrait" />
+      </div>
+
+      <h2>Wedding</h2>
+      <div class="row">
+        <img src="../assets/gallery/bismarck-wedding-scene.webp" alt="Wedding illustration, full scene" />
+        <img class="cutout" src="../assets/gallery/bismarck-wedding.png" alt="Wedding outfit, full figure" />
+      </div>
+    </main>
+  </body>
+</html>

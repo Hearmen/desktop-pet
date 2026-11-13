@@ -1,0 +1,482 @@
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: -apple-system, 'Segoe UI', 'PingFang SC', sans-serif;
+}
+
+#pet {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 152px;
+  height: 152px;
+}
+
+#flip,
+#anim,
+#sprite {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#flip {
+  transition: transform 0.18s ease;
+}
+
+#anim {
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+#sprite {
+  /* expression frames may not match the base sprite's size exactly: fit them, feet on the floor */
+  object-fit: contain;
+  object-position: 50% 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* artwork with an opaque background: present it as a rounded picture */
+#pet.card #sprite {
+  border-radius: 12px;
+}
+
+/* ---------- ground shadow ---------- */
+#shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 90px;
+  height: 12px;
+  margin-left: -45px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0) 70%);
+  transition: opacity 0.15s;
+}
+body.airborne #shadow {
+  opacity: 0;
+}
+
+/* ---------- states ---------- */
+.state-idle #anim,
+.state-react #anim {
+  animation: breathe 3.2s ease-in-out infinite;
+}
+.state-walk #anim {
+  animation: waddle 0.5s ease-in-out infinite;
+}
+.state-sleep #anim {
+  animation: doze 4.6s ease-in-out infinite;
+  filter: brightness(0.82) saturate(0.85);
+}
+.state-drag #anim {
+  transform-origin: 50% 12%;
+  animation: dangle 0.9s ease-in-out infinite;
+}
+.state-fall #anim {
+  transform: scale(0.95, 1.06);
+}
+
+/* one-shot reactions, layered on #flip's child via a class on #pet */
+#pet.hop #anim {
+  animation: hop 0.6s cubic-bezier(0.3, 0.7, 0.4, 1) 1;
+}
+#pet.squash #anim {
+  animation: squash 0.38s ease-out 1;
+}
+
+/* more one-shot actions, picked at random when she is clicked or idling */
+#pet.nod #anim {
+  animation: nod 0.7s ease-in-out 1;
+}
+#pet.tilt #anim {
+  animation: tilt 0.95s ease-in-out 1;
+}
+#pet.wiggle #anim {
+  animation: wiggle 0.8s ease-in-out 1;
+}
+#pet.shake #anim {
+  animation: shake 0.6s linear 1;
+}
+#pet.spin #anim {
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.3, 1) 1;
+}
+#pet.sway #anim {
+  animation: sway 1.2s ease-in-out 1;
+}
+#pet.stretch #anim {
+  animation: stretch 1.1s ease-in-out 1;
+}
+#pet.shrink #anim {
+  animation: shrink 0.85s ease-out 1;
+}
+#pet.flip #anim {
+  transform-origin: 50% 55%;
+  animation: flip 0.9s cubic-bezier(0.3, 0.6, 0.4, 1) 1;
+}
+
+@keyframes nod {
+  0%,
+  100% {
+    transform: rotate(0) translateY(0);
+  }
+  25% {
+    transform: rotate(5deg) translateY(4px) scale(1.02, 0.96);
+  }
+  50% {
+    transform: rotate(0) translateY(0);
+  }
+  75% {
+    transform: rotate(3deg) translateY(2px) scale(1.01, 0.98);
+  }
+}
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25%,
+  70% {
+    transform: rotate(-9deg);
+  }
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  12%,
+  37%,
+  62%,
+  87% {
+    transform: rotate(-6deg);
+  }
+  25%,
+  50%,
+  75% {
+    transform: rotate(6deg);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+@keyframes spin {
+  0% {
+    transform: translateY(0) rotateY(0);
+  }
+  50% {
+    transform: translateY(-14px) rotateY(180deg);
+  }
+  100% {
+    transform: translateY(0) rotateY(360deg);
+  }
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  25% {
+    transform: rotate(-5deg) scale(1.03, 0.98);
+  }
+  50% {
+    transform: rotate(0) scale(1.02, 0.97);
+  }
+  75% {
+    transform: rotate(5deg) scale(1.03, 0.98);
+  }
+}
+@keyframes stretch {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  20% {
+    transform: scale(1.04, 0.95);
+  }
+  55% {
+    transform: scale(0.96, 1.07);
+  }
+}
+@keyframes shrink {
+  0%,
+  100% {
+    transform: scale(1, 1) translateX(0);
+  }
+  15% {
+    transform: scale(0.93, 0.9) translateX(0);
+  }
+  30%,
+  60% {
+    transform: scale(0.93, 0.9) translateX(-2px);
+  }
+  45%,
+  75% {
+    transform: scale(0.93, 0.9) translateX(2px);
+  }
+}
+@keyframes flip {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  15% {
+    transform: translateY(6px) rotate(0) scale(1.06, 0.9);
+  }
+  55% {
+    transform: translateY(-52px) rotate(200deg);
+  }
+  90% {
+    transform: translateY(0) rotate(360deg);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.012, 0.982);
+  }
+}
+@keyframes waddle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-6px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(0) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-6px) rotate(0deg);
+  }
+}
+@keyframes doze {
+  0%,
+  100% {
+    transform: rotate(5deg) scale(1, 0.97);
+  }
+  50% {
+    transform: rotate(7deg) scale(1.015, 0.95);
+  }
+}
+@keyframes dangle {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+@keyframes hop {
+  0% {
+    transform: translateY(0) scale(1.06, 0.92);
+  }
+  35% {
+    transform: translateY(-24px) scale(0.96, 1.05);
+  }
+  70% {
+    transform: translateY(0) scale(1.05, 0.94);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+@keyframes squash {
+  0% {
+    transform: scale(1.18, 0.78);
+  }
+  55% {
+    transform: scale(0.95, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* ---------- sleeping Zs ---------- */
+#zzz {
+  position: absolute;
+  right: 8%;
+  top: 0;
+  display: none;
+  color: #dfe8ff;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(20, 30, 60, 0.8);
+}
+.state-sleep #zzz {
+  display: block;
+}
+#pet.own-zzz #zzz {
+  display: none; /* the sleeping expression frame already has Zs drawn on it */
+}
+#zzz span {
+  position: absolute;
+  opacity: 0;
+  animation: zfloat 3s linear infinite;
+}
+#zzz span:nth-child(1) {
+  font-size: 12px;
+}
+#zzz span:nth-child(2) {
+  font-size: 16px;
+  animation-delay: 1s;
+}
+#zzz span:nth-child(3) {
+  font-size: 21px;
+  animation-delay: 2s;
+}
+@keyframes zfloat {
+  0% {
+    transform: translate(0, 10px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(22px, -34px);
+    opacity: 0;
+  }
+}
+
+/* ---------- speech bubble ---------- */
+#bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 0; /* set from JS: just above the sprite's head */
+  transform: translate(-50%, 6px) scale(0.9);
+  transform-origin: 50% 100%;
+  max-width: calc(100% - 28px);
+  width: max-content;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid #8c1c24;
+  color: #2a1a1c;
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s,
+    transform 0.18s;
+}
+#bubble.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+#bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  margin-left: -6px;
+  background: inherit;
+  border-right: 1.5px solid #8c1c24;
+  border-bottom: 1.5px solid #8c1c24;
+  transform: rotate(45deg);
+}
+
+/* ---------- particles ---------- */
+#fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.emote {
+  position: absolute;
+  min-width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid #8c1c24;
+  color: #8c1c24;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 23px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  animation: emote 1.3s ease-out forwards;
+}
+@keyframes emote {
+  0% {
+    transform: translateY(8px) scale(0.3);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(-4px) scale(1.2);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-14px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.heart {
+  position: absolute;
+  color: #e2364d;
+  font-size: 18px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: heart 1s ease-out forwards;
+}
+@keyframes heart {
+  0% {
+    transform: translateY(0) scale(0.4);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.1);
+  }
+  100% {
+    transform: translateY(-46px) scale(0.9);
+    opacity: 0;
+  }
+}

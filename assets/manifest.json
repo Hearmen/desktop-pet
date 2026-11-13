@@ -1,0 +1,187 @@
+{
+ "bismarck/christmas/chibi": {
+  "w": 299,
+  "h": 297,
+  "base": 0.5102,
+  "moods": [
+   "angry",
+   "crying",
+   "flustered",
+   "joy",
+   "laugh",
+   "pout",
+   "shocked",
+   "shy",
+   "sleepy",
+   "smile",
+   "smug",
+   "stern",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ },
+ "bismarck/christmas/full": {
+  "w": 339,
+  "h": 491,
+  "base": 0.7264,
+  "moods": [
+   "angry",
+   "cheer",
+   "drink",
+   "love",
+   "reach",
+   "shy",
+   "sleepy",
+   "surprised"
+  ]
+ },
+ "bismarck/main/chibi": {
+  "w": 287,
+  "h": 311,
+  "base": 0.487,
+  "moods": [
+   "angry",
+   "cheer",
+   "cool",
+   "crying",
+   "laugh",
+   "love",
+   "shocked",
+   "shy",
+   "sigh",
+   "sleepy",
+   "smile",
+   "smug",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ },
+ "bismarck/main/full": {
+  "w": 375,
+  "h": 443,
+  "base": 0.8023,
+  "moods": [
+   "angry",
+   "charge",
+   "point",
+   "proud",
+   "reach",
+   "salute",
+   "surprised",
+   "wave"
+  ]
+ },
+ "bismarck/wedding/chibi": {
+  "w": 291,
+  "h": 307,
+  "base": 0.5034,
+  "moods": [
+   "angry",
+   "cheer",
+   "cool",
+   "crying",
+   "laugh",
+   "love",
+   "shocked",
+   "shy",
+   "sigh",
+   "sleepy",
+   "smile",
+   "smug",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ },
+ "bismarck/wedding/full": {
+  "w": 731,
+  "h": 1011,
+  "base": 0.336,
+  "moods": [
+   "angry",
+   "crying",
+   "laugh",
+   "love",
+   "reach",
+   "sleepy",
+   "surprised",
+   "thinking"
+  ]
+ },
+ "cheshire/main/chibi": {
+  "w": 273,
+  "h": 240,
+  "base": 0.6494,
+  "moods": [
+   "angry",
+   "crying",
+   "idea",
+   "joy",
+   "laugh",
+   "love",
+   "pout",
+   "shocked",
+   "sigh",
+   "sleepy",
+   "smile",
+   "sparkle",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ },
+ "cheshire/main/full": {
+  "w": 451,
+  "h": 364,
+  "base": 0.9192,
+  "moods": [
+   "angry",
+   "cheer",
+   "drink",
+   "joy",
+   "love",
+   "sleepy",
+   "surprised",
+   "thinking"
+  ]
+ },
+ "cheshire/wedding/chibi": {
+  "w": 308,
+  "h": 239,
+  "base": 0.6494,
+  "moods": [
+   "angry",
+   "crying",
+   "idea",
+   "joy",
+   "laugh",
+   "love",
+   "pout",
+   "shocked",
+   "sigh",
+   "sleepy",
+   "smile",
+   "sparkle",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ },
+ "cheshire/wedding/full": {
+  "w": 1031,
+  "h": 1100,
+  "base": 0.3264,
+  "moods": [
+   "angry",
+   "cheer",
+   "love",
+   "shy",
+   "sleepy",
+   "surprised",
+   "thinking",
+   "troubled"
+  ]
+ }
+}
