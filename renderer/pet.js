@@ -18,40 +18,40 @@ const LINES = Object.fromEntries(CATEGORIES.map((c) => [c, []]));
 // an entry to the small sprite, where there is room to tumble.
 const REACTIONS = {
   poke: [
-    { anim: 'hop', ms: 600, emote: '!', mood: ['surprised'] },
-    { anim: 'tilt', ms: 950, emote: '?', mood: ['thinking', 'point'] },
+    { anim: 'hop', ms: 600, emote: '!', mood: ['surprised', 'turn'] },
+    { anim: 'tilt', ms: 950, emote: '?', mood: ['thinking', 'point', 'binoculars', 'sit'] },
     { anim: 'wiggle', ms: 800, emote: '♪', mood: ['smile', 'wave', 'idea', 'reach', 'cheer'] },
     { anim: 'spin', ms: 800, emote: '✦', mood: ['laugh', 'sparkle', 'proud', 'joy', 'cheer'] },
     { anim: 'nod', ms: 700, mood: ['smile', 'salute', 'laugh', 'reach'] },
     { anim: 'flip', ms: 900, emote: '✦', mood: ['cheer', 'joy', 'laugh'], chibi: true },
   ],
   pat: [
-    { anim: 'sway', ms: 1200, emote: '♥', mood: ['love', 'joy'] },
-    { anim: 'nod', ms: 700, emote: '♪', mood: ['laugh', 'joy', 'cheer', 'proud', 'wave'] },
-    { anim: 'shrink', ms: 850, emote: '💦', mood: ['shy', 'troubled', 'love'] },
+    { anim: 'sway', ms: 1200, emote: '♥', mood: ['love', 'joy', 'offer'] },
+    { anim: 'nod', ms: 700, emote: '♪', mood: ['laugh', 'joy', 'cheer', 'proud', 'wave', 'salute'] },
+    { anim: 'shrink', ms: 850, emote: '💦', mood: ['shy', 'troubled', 'love', 'kneel'] },
   ],
   annoyed: [
     { anim: 'shake', ms: 600, emote: '💢', mood: ['angry'] },
     { anim: 'shrink', ms: 850, emote: '💦', mood: ['flustered', 'troubled', 'crying', 'shy'] },
     { anim: 'wiggle', ms: 800, emote: '💢', mood: ['pout', 'stern', 'sigh', 'angry'] },
-    { anim: 'sway', ms: 1200, emote: '♥', mood: ['shy', 'love'] },
+    { anim: 'sway', ms: 1200, emote: '♥', mood: ['shy', 'love', 'kneel'] },
   ],
 };
 // Expressions that last as long as a state does.
-const STATE_MOODS = { sleep: ['sleepy'], drag: ['shocked', 'surprised'], fall: ['shocked', 'surprised'] };
+const STATE_MOODS = { sleep: ['sleepy', 'rest'], drag: ['shocked', 'surprised'], fall: ['shocked', 'surprised'] };
 // Expressions for moments that are not clicks, and how long they show.
 const EVENT_MOODS = {
   greet: { mood: ['smile', 'wave', 'salute', 'cheer', 'reach'], ms: 4000 },
-  talk: { mood: ['smile', 'reach', 'point', 'thinking'], ms: 4000 },
+  talk: { mood: ['smile', 'reach', 'point', 'thinking', 'map'], ms: 4000 },
   land: { mood: ['cool', 'smug', 'proud', 'charge', 'joy', 'cheer'], ms: 2800 },
-  wake: { mood: ['surprised'], ms: 1600 },
+  wake: { mood: ['surprised', 'turn'], ms: 1600 },
 };
 // Small unprompted movements while she stands around, each with a passing expression.
 const FIDGETS = [
   { anim: 'nod', ms: 700, mood: ['smile', 'salute'] },
-  { anim: 'tilt', ms: 950, mood: ['thinking'] },
-  { anim: 'stretch', ms: 1100, mood: ['sigh', 'pout', 'drink'] },
-  { anim: 'wiggle', ms: 800, mood: ['smug', 'idea', 'sparkle', 'drink', 'wave'] },
+  { anim: 'tilt', ms: 950, mood: ['thinking', 'map', 'binoculars'] },
+  { anim: 'stretch', ms: 1100, mood: ['sigh', 'pout', 'drink', 'sit'] },
+  { anim: 'wiggle', ms: 800, mood: ['smug', 'idea', 'sparkle', 'drink', 'binoculars', 'wave', 'cool'] },
 ];
 
 let tempFrame = null; // expression frame from the latest reaction, until it wears off
@@ -83,6 +83,7 @@ function refreshFace(force) {
   if (src === shownSrc) return;
   shownSrc = src;
   spriteEl.src = src;
+  placeBubble();
   const moods = cfg.moods || {};
   console.log('frame ->', Object.keys(moods).find((n) => moods[n] === src) || 'neutral');
 }
@@ -151,6 +152,55 @@ const pick = (list) => {
 let voice = null; // the Audio currently playing, if any
 let voiceOn = true;
 let bubbleBottom = 0; // where the bubble sits when it fits: just above her head
+let bubbleBase = null; // { floor, h, top }: what bubbleBottom is worked out from
+// Every expression/pose frame as it is drawn in the sprite box: its opaque pixels (for clicks)
+// and how high it reaches (for the bubble). Poses differ a lot in outline from the neutral one.
+let frameMaps = new Map();
+
+// Puts the bubble just above the head of the frame on show, so no pose is ever covered by it.
+function placeBubble() {
+  if (!bubbleBase) return;
+  const m = frameMaps.get(shownSrc);
+  bubbleBottom = bubbleBase.floor + bubbleBase.h * (1 - (m ? m.top : bubbleBase.top)) + 10;
+  if (!bubbleEl.classList.contains('show')) {
+    bubbleEl.style.bottom = Math.min(bubbleBottom, window.innerHeight - 50) + 'px';
+  }
+}
+
+async function mapFrames(c) {
+  const maps = new Map();
+  const w = 240;
+  const h = Math.max(1, Math.round((w * natH) / natW));
+  const srcs = Object.values(c.moods || {});
+  for (let i = 0; i < srcs.length; i++) {
+    const img = preloaded[i];
+    try {
+      await img.decode();
+    } catch {
+      continue;
+    }
+    if (cfg !== c) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    // same fit as the <img>: contained in the box, centred, feet on the floor
+    const s = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+    const dw = img.naturalWidth * s;
+    const dh = img.naturalHeight * s;
+    ctx.drawImage(img, (w - dw) / 2, h - dh, dw, dh);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let top = 0;
+    const rowHasInk = (y) => {
+      for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3] > 60) return true;
+      return false;
+    };
+    while (top < h - 1 && !rowHasInk(top)) top++;
+    maps.set(srcs[i], { w, h, data, top: top / h });
+  }
+  frameMaps = maps;
+  placeBubble();
+}
 
 function stopVoice() {
   if (!voice) return;
@@ -197,6 +247,7 @@ function say(line, ms = 3600, kind = 'idle') {
     // long lines grow upward; keep the whole bubble inside the window
     const fit = window.innerHeight - bubbleEl.offsetHeight - 6;
     bubbleEl.style.bottom = Math.max(0, Math.min(bubbleBottom, fit)) + 'px';
+    console.log('bubble', fit >= bubbleBottom ? 'clear of her head' : 'OVERLAPS by ' + Math.round(bubbleBottom - fit));
     ms = Math.max(ms, text.length * 100);
   }
 
@@ -313,6 +364,8 @@ function hit(e) {
   const v = (e.clientY - r.top) / r.height;
   if (u < 0 || u >= 1 || v < 0 || v >= 1) return false;
   if (isFlipped()) u = 1 - u;
+  const m = frameMaps.get(shownSrc); // the pose on show, when it is not the neutral one
+  if (m) return m.data[(Math.floor(v * m.h) * m.w + Math.floor(u * m.w)) * 4 + 3] > 24;
   const x = Math.floor(u * natW);
   const y = Math.floor(v * natH);
   return alpha[(y * natW + x) * 4 + 3] > 24;
@@ -336,6 +389,7 @@ api.on('config', async (c) => {
   if (!voiceOn) stopVoice();
   petEl.classList.toggle('card', !!c.card);
   tempFrame = null;
+  frameMaps = new Map();
   clearTimeout(moodTimer);
   // decode the expression frames up front so the first swap does not flicker
   preloaded = Object.values(c.moods || {}).map((src) => Object.assign(new Image(), { src }));
@@ -387,15 +441,14 @@ api.on('config', async (c) => {
 
   const k = c.w / natW;
   const padBottom = (natH - 1 - bottom) * k;
-  const padTop = top * k;
 
   petEl.style.width = c.w + 'px';
   petEl.style.height = c.h + 'px';
   // c.foot is empty room kept below her feet so a lean never dips out of the window
   petEl.style.bottom = c.foot - padBottom + 'px';
   shadowEl.style.bottom = c.foot + 1 + 'px';
-  bubbleBottom = c.foot + c.h - padBottom - padTop + 10;
-  bubbleEl.style.bottom = Math.min(bubbleBottom, window.innerHeight - 50) + 'px';
+  bubbleBase = { floor: c.foot - padBottom, h: c.h, top: top / natH };
+  placeBubble();
 
   const footW = Math.max(40, (right - left) * k * 1.1);
   shadowEl.style.width = footW + 'px';
@@ -403,6 +456,7 @@ api.on('config', async (c) => {
   shadowEl.style.height = Math.max(8, footW * 0.14) + 'px';
 
   updateFlip();
+  mapFrames(c);
 });
 
 api.on('state', (s) => {
@@ -523,6 +577,14 @@ setInterval(() => {
 
 // Lets a test run trigger a click reaction without a real mouse: PET_DEMO=poke|pat|annoyed
 api.on('demo', (kind) => {
+  if (kind.startsWith('mood:')) {
+    tempFrame = frameFor([kind.slice(5)]);
+    refreshFace(true);
+    // the longest line there is: the worst case for the bubble fitting above her head
+    const all = CATEGORIES.flatMap((k) => LINES[k]).filter((l) => l.text);
+    say(all.sort((a, b) => b.text.length - a.text.length)[0]);
+    return;
+  }
   react(kind);
   say(pick(LINES[kind === 'annoyed' ? 'pokeMany' : kind]));
 });

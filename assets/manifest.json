@@ -59,18 +59,18 @@
   ]
  },
  "bismarck/main/full": {
-  "w": 375,
-  "h": 443,
-  "base": 0.8023,
+  "w": 471,
+  "h": 358,
+  "base": 0.9829,
   "moods": [
    "angry",
-   "charge",
+   "binoculars",
+   "drink",
+   "map",
    "point",
-   "proud",
-   "reach",
    "salute",
-   "surprised",
-   "wave"
+   "sleepy",
+   "surprised"
   ]
  },
  "bismarck/wedding/chibi": {
@@ -96,18 +96,18 @@
   ]
  },
  "bismarck/wedding/full": {
-  "w": 731,
-  "h": 1011,
-  "base": 0.336,
+  "w": 1212,
+  "h": 1100,
+  "base": 0.3085,
   "moods": [
    "angry",
-   "crying",
-   "laugh",
-   "love",
+   "cool",
+   "kneel",
+   "offer",
    "reach",
-   "sleepy",
-   "surprised",
-   "thinking"
+   "rest",
+   "sit",
+   "turn"
   ]
  },
  "cheshire/main/chibi": {
