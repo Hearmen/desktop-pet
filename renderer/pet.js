@@ -75,11 +75,35 @@ let lastPoseChange = 0;
 let revertAfterLine = false; // the pose's time ran out mid-line; go back to neutral when she finishes
 const isFull = () => !!cfg && cfg.form.endsWith('/full');
 
+// The full figure does not stand in one pose: every so often she moves on to another, going
+// through all of them in a shuffled order. Never mid-line, mid-reaction or while carried.
+const SLEEP_POSES = ['sleepy', 'rest']; // kept for when she is actually asleep
+let restFrame = null; // the pose she is resting in now (null: the neutral one)
+let poseQueue = [];
+let nextPoseAt = 0;
+
+function rotatePose() {
+  if (!isFull() || !cfg.rotate || Date.now() < nextPoseAt) return;
+  if (talking || pressed || tempFrame || (state !== 'idle' && state !== 'walk')) return;
+  if (!poseQueue.length) {
+    const moods = cfg.moods || {};
+    poseQueue = [null, ...Object.keys(moods).filter((n) => !SLEEP_POSES.includes(n)).map((n) => moods[n])];
+    for (let i = poseQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [poseQueue[i], poseQueue[j]] = [poseQueue[j], poseQueue[i]];
+    }
+    if (poseQueue.length > 1 && poseQueue[0] === restFrame) poseQueue.push(poseQueue.shift());
+  }
+  restFrame = poseQueue.shift();
+  nextPoseAt = Date.now() + cfg.rotate;
+  refreshFace();
+}
+
 function refreshFace(force) {
   if (!cfg) return;
   if (!force && isFull() && talking) return; // hold the pose until the line is over
   // what is happening to her right now (asleep, carried) outranks a leftover click expression
-  const src = frameFor(STATE_MOODS[state]) || tempFrame || cfg.src;
+  const src = frameFor(STATE_MOODS[state]) || tempFrame || restFrame || cfg.src;
   if (src === shownSrc) return;
   shownSrc = src;
   spriteEl.src = src;
@@ -389,6 +413,9 @@ api.on('config', async (c) => {
   if (!voiceOn) stopVoice();
   petEl.classList.toggle('card', !!c.card);
   tempFrame = null;
+  restFrame = null;
+  poseQueue = [];
+  nextPoseAt = Date.now() + (c.rotate || 0);
   frameMaps = new Map();
   clearTimeout(moodTimer);
   // decode the expression frames up front so the first swap does not flicker
@@ -568,10 +595,11 @@ window.addEventListener('contextmenu', (e) => {
 });
 
 setInterval(() => {
+  rotatePose();
   if (state !== 'idle' || pressed || Date.now() < nextFidget) return;
   const f = FIDGETS[Math.floor(Math.random() * FIDGETS.length)];
   oneShot(f.anim, f.ms);
-  setMood(f.mood, f.ms + 1300);
+  if (!isFull()) setMood(f.mood, f.ms + 1300); // the full figure changes pose on its own schedule
   nextFidget = Date.now() + 5000 + Math.random() * 8000;
 }, 1000);
 

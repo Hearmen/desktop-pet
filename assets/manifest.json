@@ -96,17 +96,23 @@
   ]
  },
  "bismarck/wedding/full": {
-  "w": 1212,
-  "h": 1100,
-  "base": 0.3085,
+  "w": 520,
+  "h": 474,
+  "base": 0.8219,
   "moods": [
-   "angry",
    "cool",
    "kneel",
+   "laugh",
+   "love",
    "offer",
    "reach",
    "rest",
+   "shy",
    "sit",
+   "sleepy",
+   "surprised",
+   "thinking",
+   "troubled",
    "turn"
   ]
  },

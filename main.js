@@ -233,6 +233,7 @@ function applyForm(keepAnchor) {
     voice: settings.voice,
     lines: loadVoiced(),
     moods: loadMoods(),
+    rotate: Number(process.env.PET_ROTATE_MS) || 60000, // full figure: time in each pose
   });
   send('state', { state, dir, face, floating });
 }
