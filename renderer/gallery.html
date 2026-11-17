@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'" />
     <title>Gallery</title>
     <style>
       html,
@@ -10,58 +10,259 @@
         margin: 0;
         background: #14110f;
         color: #e9dcc3;
-        font-family: -apple-system, 'Segoe UI', sans-serif;
+        font-family: -apple-system, 'Segoe UI', 'PingFang SC', sans-serif;
       }
       main {
-        padding: 20px 24px 32px;
+        padding: 20px 24px 40px;
       }
-      h2 {
-        margin: 20px 0 12px;
+      #bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        justify-content: flex-end;
+        padding: 10px 24px;
+        background: linear-gradient(#14110f, #14110fdd 70%, #14110f00);
+        backdrop-filter: blur(2px);
+      }
+      #editToggle {
+        border: 1px solid #c8a24a;
+        background: transparent;
+        color: #e8cf8a;
         font-size: 13px;
         font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #b9a57f;
+        padding: 6px 16px;
+        border-radius: 16px;
+        cursor: pointer;
       }
-      h2:first-child {
-        margin-top: 0;
+      #editToggle:hover {
+        background: #c8a24a22;
+      }
+      body.editing #editToggle {
+        background: #c8a24a;
+        color: #1a1410;
+      }
+      h1 {
+        margin: 34px 0 2px;
+        font-size: 22px;
+        font-weight: 700;
+        color: #f0e6d0;
+      }
+      h1:first-child {
+        margin-top: 4px;
+      }
+      h2 {
+        margin: 22px 0 4px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #c8a24a;
+      }
+      .pose {
+        margin: 10px 0 4px;
+        font-size: 12px;
+        color: #9a8f7a;
+      }
+      .count {
+        color: #6f6656;
+        font-weight: 400;
       }
       .row {
         display: flex;
-        gap: 16px;
-        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: flex-end;
       }
-      .row img {
-        min-width: 0;
-        height: 420px;
-        max-width: 100%;
+      figure {
+        margin: 0;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      figure img {
+        height: 200px;
+        max-width: 240px;
         object-fit: contain;
-        border-radius: 8px;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6);
+        object-position: 50% 100%;
       }
-      .row img.cutout {
-        box-shadow: none;
+      figure.chibi img {
+        height: 120px;
+      }
+      figcaption {
+        font-size: 11px;
+        color: #8d8370;
+      }
+      figure.neutral figcaption {
+        color: #d8b45a;
+      }
+      .namefield {
+        width: 90px;
+        font-size: 11px;
+        text-align: center;
+        color: #e9dcc3;
+        background: #000;
+        border: 1px solid #3a342b;
+        border-radius: 6px;
+        padding: 2px 4px;
+      }
+      .delbtn {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        background: #8c1c24;
+        color: #fff;
+        font-size: 12px;
+        line-height: 22px;
+        cursor: pointer;
+        box-shadow: 0 1px 4px #000a;
+      }
+      body.editing figure.neutral::after {
+        content: 'base';
+        font-size: 10px;
+        color: #6f6656;
+      }
+      .addbtn {
+        align-self: stretch;
+        min-width: 150px;
+        min-height: 200px;
+        border: 2px dashed #3a342b;
+        background: transparent;
+        color: #9a8f7a;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .addbtn span {
+        font-size: 30px;
+        color: #c8a24a;
+      }
+      .addbtn:hover {
+        border-color: #c8a24a;
+        color: #e8cf8a;
+      }
+      hr {
+        margin: 30px 0 0;
+        border: 0;
+        border-top: 1px solid #2a2520;
+      }
+      #empty {
+        color: #8d8370;
+        padding: 40px 0;
+      }
+      /* add-variant panel */
+      .panelback {
+        position: fixed;
+        inset: 0;
+        background: #000a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+      }
+      .panel {
+        width: 440px;
+        max-width: calc(100vw - 40px);
+        background: #1d1812;
+        border: 1px solid #3a342b;
+        border-radius: 14px;
+        padding: 18px 20px 20px;
+        box-shadow: 0 20px 60px #000c;
+      }
+      .panel h3 {
+        margin: 0 0 2px;
+        font-size: 15px;
+        color: #f0e6d0;
+      }
+      .srcname {
+        font-size: 11px;
+        color: #8d8370;
+        margin-bottom: 12px;
+      }
+      .preview {
+        display: flex;
+        justify-content: center;
+        background: #0d0b09;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .cvwrap canvas.shot {
+        height: 260px;
+        width: auto;
+        display: block;
+      }
+      .controls {
+        margin: 16px 0 4px;
+      }
+      .ctl {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+        font-size: 13px;
+      }
+      .ctl > span:first-child {
+        width: 44px;
+        color: #b9a57f;
+      }
+      .ctl input[type='text'],
+      .ctl input:not([type]) {
+        flex: 1;
+        background: #000;
+        border: 1px solid #3a342b;
+        border-radius: 7px;
+        color: #e9dcc3;
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+      .ctl input[type='range'] {
+        flex: 1;
+        accent-color: #c8a24a;
+      }
+      .ctl .val {
+        width: 48px;
+        text-align: right;
+        color: #9a8f7a;
+      }
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .buttons button {
+        padding: 8px 18px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .ghost {
+        background: transparent;
+        border-color: #3a342b;
+        color: #cbbfa8;
+      }
+      .primary {
+        background: #c8a24a;
+        color: #1a1410;
       }
     </style>
   </head>
   <body>
-    <main>
-      <h2>Main</h2>
-      <div class="row">
-        <img class="cutout" src="../assets/gallery/bismarck-main.png" alt="Main outfit, full rigging" />
-      </div>
-
-      <h2>Christmas</h2>
-      <div class="row">
-        <img src="../assets/gallery/bismarck-christmas-scene.webp" alt="Christmas illustration, full scene" />
-        <img src="../assets/gallery/bismarck-christmas.jpg" alt="Christmas illustration, portrait" />
-      </div>
-
-      <h2>Wedding</h2>
-      <div class="row">
-        <img src="../assets/gallery/bismarck-wedding-scene.webp" alt="Wedding illustration, full scene" />
-        <img class="cutout" src="../assets/gallery/bismarck-wedding.png" alt="Wedding outfit, full figure" />
-      </div>
-    </main>
+    <div id="bar"><button id="editToggle">Edit</button></div>
+    <main id="root"><p id="empty">Loading…</p></main>
+    <script src="gallery.js"></script>
   </body>
 </html>

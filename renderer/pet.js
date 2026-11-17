@@ -38,7 +38,7 @@ const REACTIONS = {
   ],
 };
 // Expressions that last as long as a state does.
-const STATE_MOODS = { sleep: ['sleepy', 'rest'], drag: ['shocked', 'surprised'], fall: ['shocked', 'surprised'] };
+const STATE_MOODS = { sleep: ['sleepy', 'nap', 'doze'], drag: ['shocked', 'surprised'], fall: ['shocked', 'surprised'] };
 // Expressions for moments that are not clicks, and how long they show.
 const EVENT_MOODS = {
   greet: { mood: ['smile', 'wave', 'salute', 'cheer', 'reach'], ms: 4000 },
@@ -77,7 +77,7 @@ const isFull = () => !!cfg && cfg.form.endsWith('/full');
 
 // The full figure does not stand in one pose: every so often she moves on to another, going
 // through all of them in a shuffled order. Never mid-line, mid-reaction or while carried.
-const SLEEP_POSES = ['sleepy', 'rest']; // kept for when she is actually asleep
+const SLEEP_POSES = ['sleepy', 'nap', 'doze']; // sleeping poses: shown only when asleep, never in the idle rotation
 let restFrame = null; // the pose she is resting in now (null: the neutral one)
 let poseQueue = [];
 let nextPoseAt = 0;

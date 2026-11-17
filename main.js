@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, screen, nativeImage, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -558,13 +558,117 @@ function openGallery() {
   }
   galleryWin = new BrowserWindow({
     width: 1180,
-    height: 640,
+    height: 720,
     title: 'Gallery',
     backgroundColor: '#14110f',
     autoHideMenuBar: true,
+    webPreferences: { preload: path.join(__dirname, 'renderer', 'gallery-preload.js') },
   });
   galleryWin.loadFile(path.join(__dirname, 'renderer', 'gallery.html'));
 }
+
+// Everything the gallery needs to show every variant: the sprite sets from the manifest,
+// grouped under their character and outfit labels, each with its frames as relative paths.
+ipcMain.handle('gallery:data', () => {
+  const characters = Object.entries(CHARACTERS).map(([ck, c]) => ({
+    key: ck,
+    label: c.label,
+    skins: Object.entries(c.skins).map(([sk, s]) => ({
+      key: sk,
+      label: s.label,
+      poses: Object.keys(POSES)
+        .filter((pk) => MANIFEST[`${ck}/${sk}/${pk}`])
+        .map((pk) => {
+          const form = `${ck}/${sk}/${pk}`;
+          const entry = MANIFEST[form];
+          const frames = ['neutral', ...entry.moods];
+          return {
+            key: pk,
+            label: POSES[pk].label,
+            form,
+            w: entry.w,
+            h: entry.h,
+            frames: frames.map((m) => ({ name: m, src: `../assets/${form}/${m}.png?t=${Date.now()}` })),
+          };
+        }),
+    })),
+  }));
+  return { characters };
+});
+
+// ---- Editing variants straight from the gallery (no re-slicing, no code changes) ----
+
+function writeManifest() {
+  fs.writeFileSync(path.join(ASSETS, 'manifest.json'), JSON.stringify(MANIFEST, null, 1));
+}
+
+// If the pet is currently showing this form, re-send it so a change appears at once.
+function refreshIfShowing(form) {
+  if (win && !win.isDestroyed() && formKey() === form) applyForm(true);
+}
+
+// Let the gallery pick source images; default to this form's resource folder.
+ipcMain.handle('gallery:pick', async (_e, { character }) => {
+  const dir = path.join(RESOURCES, (CHARACTERS[character] && CHARACTERS[character].resources) || '', 'emotions');
+  const res = await dialog.showOpenDialog(galleryWin, {
+    title: 'Add a variant',
+    defaultPath: fs.existsSync(dir) ? dir : RESOURCES,
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['png', 'webp', 'jpg', 'jpeg'] }],
+  });
+  if (res.canceled || !res.filePaths.length) return null;
+  const file = res.filePaths[0];
+  return { path: file, dataURL: 'data:image/png;base64,' + fs.readFileSync(file).toString('base64') };
+});
+
+// The gallery sends a finished PNG (already cropped, cleaned and scaled on its canvas).
+ipcMain.handle('gallery:save', (_e, { form, name, dataURL }) => {
+  const entry = MANIFEST[form];
+  if (!entry) return { error: 'unknown set' };
+  name = String(name || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!name) return { error: 'name a variant with letters or numbers' };
+  const dir = path.join(ASSETS, form);
+  fs.mkdirSync(dir, { recursive: true });
+  const b64 = dataURL.replace(/^data:image\/png;base64,/, '');
+  fs.writeFileSync(path.join(dir, name + '.png'), Buffer.from(b64, 'base64'));
+  if (name !== 'neutral' && !entry.moods.includes(name)) {
+    entry.moods = [...entry.moods, name].sort();
+  }
+  writeManifest();
+  refreshIfShowing(form);
+  return { ok: true };
+});
+
+ipcMain.handle('gallery:remove', (_e, { form, name }) => {
+  const entry = MANIFEST[form];
+  if (!entry) return { error: 'unknown set' };
+  if (name === 'neutral') return { error: 'neutral is the base pose and cannot be removed' };
+  try {
+    fs.unlinkSync(path.join(ASSETS, form, name + '.png'));
+  } catch {}
+  entry.moods = entry.moods.filter((m) => m !== name);
+  writeManifest();
+  refreshIfShowing(form);
+  return { ok: true };
+});
+
+ipcMain.handle('gallery:rename', (_e, { form, from, to }) => {
+  const entry = MANIFEST[form];
+  if (!entry) return { error: 'unknown set' };
+  if (from === 'neutral') return { error: 'neutral cannot be renamed' };
+  to = String(to || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!to) return { error: 'name a variant with letters or numbers' };
+  if (to !== from && entry.moods.includes(to)) return { error: 'there is already a variant called ' + to };
+  try {
+    fs.renameSync(path.join(ASSETS, form, from + '.png'), path.join(ASSETS, form, to + '.png'));
+  } catch (err) {
+    return { error: String(err) };
+  }
+  entry.moods = entry.moods.map((m) => (m === from ? to : m)).sort();
+  writeManifest();
+  refreshIfShowing(form);
+  return { ok: true };
+});
 
 function createPet() {
   const wa = screen.getPrimaryDisplay().workArea;
@@ -687,6 +791,35 @@ app.whenReady().then(() => {
   tray.on('right-click', popTray);
 
   setInterval(tick, TICK_MS);
+
+  if (process.env.PET_GALLERY) {
+    openGallery();
+    galleryWin.webContents.on('console-message', (_e, _l, m) => console.log('gallery:', m));
+    galleryWin.webContents.once('did-finish-load', () => {
+      setTimeout(async () => {
+        if (process.env.PET_GALLERY_EDIT) {
+          await galleryWin.webContents.executeJavaScript("document.getElementById('editToggle').click()");
+          await new Promise((res) => setTimeout(res, 300));
+        }
+        const img = await galleryWin.webContents.capturePage();
+        fs.writeFileSync(process.env.PET_GALLERY, img.toPNG());
+        const n = await galleryWin.webContents.executeJavaScript('document.querySelectorAll("figure img").length');
+        console.log('gallery figures:', n);
+        if (process.env.PET_GALLERY_TEST) {
+          const r = await galleryWin.webContents.executeJavaScript('window.__galleryTest()');
+          console.log('gallery test:', JSON.stringify(r));
+        }
+        if (process.env.PET_VIS) {
+          const [form, rel] = process.env.PET_VIS.split('|');
+          const r = await galleryWin.webContents.executeJavaScript(`window.__visCheck(${JSON.stringify(form)}, ${JSON.stringify(rel)})`);
+          console.log('vis:', JSON.stringify(r));
+          await new Promise((res) => setTimeout(res, 300));
+          const img2 = await galleryWin.webContents.capturePage();
+          fs.writeFileSync(process.env.PET_GALLERY.replace('.png', '-vis.png'), img2.toPNG());
+        }
+      }, Number(process.env.PET_GALLERY_DELAY || 2500));
+    });
+  }
 });
 
 app.on('window-all-closed', () => app.quit());

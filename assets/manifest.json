@@ -96,24 +96,33 @@
   ]
  },
  "bismarck/wedding/full": {
-  "w": 520,
-  "h": 474,
-  "base": 0.8219,
+  "w": 546,
+  "h": 484,
+  "base": 0.7091,
   "moods": [
+   "angry",
    "cool",
+   "coy",
+   "doze",
    "kneel",
    "laugh",
+   "lounge",
    "love",
+   "nap",
    "offer",
+   "ponder",
+   "present",
    "reach",
+   "read",
+   "recline",
    "rest",
+   "rose",
    "shy",
    "sit",
    "sleepy",
-   "surprised",
-   "thinking",
-   "troubled",
-   "turn"
+   "toss",
+   "turn",
+   "wave"
   ]
  },
  "cheshire/main/chibi": {
